@@ -1,7 +1,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
+class ViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UISearchBarDelegate {
     
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet var collectionView: UICollectionView!
@@ -17,6 +17,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     var imageDictionary = [UIImage]()
     var compAvatarDictionary = [UIImage]()
     
+    var searchWord = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,7 +28,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         let barImageView = searchBar.value(forKey: "_background") as! UIImageView
         barImageView.removeFromSuperview()
         searchBar.backgroundColor = Style().background
-        searchBar.tintColor = Style().white // 文字入力中のパカパカの色
+        searchBar.tintColor = Style().white // キャレットの色
         let searchTextField: UITextField? = searchBar.value(forKey: "searchField") as? UITextField
         searchTextField?.textColor = Style().white // 入力する文字の色
         if searchTextField!.responds(to: #selector(getter: UITextField.attributedPlaceholder)) {
@@ -43,8 +44,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                 secondSubView.backgroundColor = Style().background_light // 検索バーの中の色
             }
         }
-        
-        
+        searchBar.delegate = self
         
         // CollectionViewのレイアウトを生成.
         let layout = UICollectionViewFlowLayout()
@@ -52,8 +52,8 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         let margin_CV: CGFloat = 75
         
         // Cellの定義
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width - 37, height: 400)
-        layout.sectionInset = UIEdgeInsetsMake(10, 0, 10, 0)
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width - 37, height: 350)
+        layout.sectionInset = UIEdgeInsetsMake(10, 0, 100, 0)
         //layout.headerReferenceSize = CGSize(width:100,height:30)
         // collectionViewの定義
         self.collectionView = UICollectionView(frame: CGRect(x: 0, y: margin_CV, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height-margin_CV ), collectionViewLayout: layout)
@@ -63,11 +63,39 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         self.collectionView.backgroundColor = Style().background
         self.view.addSubview(self.collectionView!)
         
-        // 並列処理用
-        //let q = DispatchQueue(label: "getJSON")
+        // 非同期処理でAPI取得
         DispatchQueue(label: "getJSON").async{
-            self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=swift&page=1")
+            //self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=\(self.searchWord)&page=1")
+            self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=福岡&page=1")
         }
+    }
+    
+    //serchボタンが押された時に呼ばれる関数
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        //キーボードを閉じる
+        self.view.endEditing(true)
+        searchWord = searchBar.text!
+        looking_forArray = [String]()
+        titleArray = [String]()
+        imageURLArray = [String]()
+        compAvatarURLArray = [String]()
+        compNameArray = [String]()
+        supportCountArray = [Int]()
+        candidateCountArray = [Int]()
+        imageDictionary = [UIImage]()
+        compAvatarDictionary = [UIImage]()
+        
+        self.collectionView.reloadData()
+
+        
+        DispatchQueue(label: "getJSON").async{
+            self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=\(self.searchWord)&page=1")
+        }
+    }
+    
+    // TextField以外の部分をタッチした時にキーボード閉じるやつ
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.view.endEditing(true)
     }
 
     override func didReceiveMemoryWarning() {
@@ -75,8 +103,8 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     }
 
     // JSONを取得する関数
-    func getJSON(url urlString: String) -> Void{
-        let url = URL(string: urlString)
+    func getJSON(url urlString: String!) -> Void{
+        let url = URL(string: urlString!.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!) // 日本語を許容
         let request = URLRequest(url: url!)
         let queue = OperationQueue.main
 
@@ -90,19 +118,25 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                         for i in 0..<10{
                             let looking_for = data[i]["looking_for"] as! String
                             let title = data[i]["title"] as! String
-                            let imageURL = data[i]["image"]!["i_320_131"] as! String
+                            
                             let compName = data[i]["company"]!["name"] as! String
                             let support_count = data[i]["support_count"] as! Int
                             let candidate_count = data[i]["candidate_count"] as! Int
                             
+                            if let imageURL = data[i]["image"]!["i_320_131"] as? String{
+                                self.imageURLArray.append(imageURL)
+                            }else{
+                                self.imageURLArray.append("https://fullfill.sakura.ne.jp/StockList/img/icon6.jpg")
+                            }
                             if let compAvatar = data[i]["company"]!["avatar"] as? [String:AnyObject] {
                                 let compAvatarURL = compAvatar["s_100"] as! String
                                 self.compAvatarURLArray.append(compAvatarURL)
+                            }else{
+                                self.compAvatarURLArray.append("https://fullfill.sakura.ne.jp/StockList/img/icon6.jpg")
                             }
                             
                             self.looking_forArray.append(looking_for)
                             self.titleArray.append(title)
-                            self.imageURLArray.append(imageURL)
                             self.compNameArray.append(compName)
                             self.supportCountArray.append(support_count)
                             self.candidateCountArray.append(candidate_count)
@@ -134,6 +168,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     func getImage(){
         // サブスレッドでURLから画像を取得して辞書に入れる
         DispatchQueue(label: "getImage").async{
+            print(self.compAvatarURLArray.count)
             for n in 0..<10{
                 let imageURL = NSURL(string: self.imageURLArray[n])
                 let imageData: NSData = NSData(contentsOf: imageURL! as URL)!
@@ -154,6 +189,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     
     // Cellが選択された時に呼び出される
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        self.view.endEditing(true)
         print("Num: \(indexPath.row)")
     }
     // Cellの総数を返す

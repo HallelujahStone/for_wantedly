@@ -47,6 +47,7 @@
                             </imageView>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <gestureRecognizers/>
                         <constraints>
                             <constraint firstItem="GCy-M4-Xbg" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="3" id="5tS-Ib-vf1"/>
                             <constraint firstItem="bxl-Bw-c7h" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="BRt-cZ-VrA"/>
