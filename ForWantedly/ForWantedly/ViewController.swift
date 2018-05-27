@@ -6,7 +6,14 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet var collectionView: UICollectionView!
     
-    var zero = ["","","","","","","","","",""]
+    var looking_forArray = ["","","","","","","","","",""]
+    var titleArray       = ["","","","","","","","","",""]
+    var imageURLArray    = ["","","","","","","","","",""]
+    var compAvatarURLArray  = ["","","","","","","","","",""]
+    
+    var imageDictionary:[Int : UIImage?] = [0:nil, 1:nil, 2:nil, 3:nil, 4:nil, 5:nil, 6:nil, 7:nil, 8:nil, 9:nil]
+    var compAvatarDictionary:[Int : UIImage?] = [0:nil, 1:nil, 2:nil, 3:nil, 4:nil, 5:nil, 6:nil, 7:nil, 8:nil, 9:nil]
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,13 +47,6 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         //let q = DispatchQueue(label: "getJSON")
         DispatchQueue(label: "getJSON").async{
             self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=swift&page=1")
-            
-            /* ここなくていいかも
-            DispatchQueue.main.async {
-                self.collectionView.reloadData()
-                print("reloaded")
-            }
-            */
         }
     }
 
@@ -63,19 +63,32 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         NSURLConnection.sendAsynchronousRequest(request, queue: queue) { response, data, error in
             if let response = response, let data = data {
                 do {
-                    let json = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) as! [String: AnyObject]
+                    let json = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) as! [String : AnyObject]
                     
-                    if let data = json["data"] as? [[String: AnyObject]]{
+                    if let data = json["data"] as? [[String:AnyObject]] {
                         //
                         for i in 0..<10{
+                            let looking_for = data[i]["looking_for"] as! String
                             let title = data[i]["title"] as! String
-                            self.zero[i] = title
+                            let imageURL = data[i]["image"]!["i_320_131"] as! String
+                            
+                            if let corpAvatar = data[i]["company"]!["avatar"] as? [String:AnyObject] {
+                                let corpAvatarURL = corpAvatar["s_100"] as! String
+                                self.compAvatarURLArray[i] = corpAvatarURL
+                            }
+                            
+                            self.looking_forArray[i] = looking_for
+                            self.titleArray[i] = title
+                            self.imageURLArray[i] = imageURL
                         }
-                        // 取得でき次第メインスレッドでCollectionViewを更新
-                        DispatchQueue.main.async {
-                            self.collectionView.reloadData()
-                            print("reloaded")
-                        }
+                    }
+                    print(self.imageURLArray[0])
+                    // JSONが取得でき次第メインスレッドでCollectionViewを更新
+                    DispatchQueue.main.async {
+                        self.collectionView.reloadData()
+                        print("reloaded")
+                        
+                        self.getImage()
                     }
                     // _metadata取得
                     if let metadata = json["_metadata"] as? [String: AnyObject]{
@@ -86,6 +99,28 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                 }
             } else {
                 print(error ?? "")
+            }
+        }
+    }
+    
+    // imageやavatarの画像を取得してくる関数
+    func getImage(){
+        // サブスレッドでURLから画像を取得して辞書に入れる
+        DispatchQueue(label: "getImage").async{
+            for n in 0..<10{
+                let imageURL = NSURL(string: self.imageURLArray[n])
+                let imageData: NSData = NSData(contentsOf: imageURL! as URL)!
+                self.imageDictionary[n] = UIImage(data: imageData as Data)
+                
+                let avatarURL = NSURL(string: self.compAvatarURLArray[n])
+                let avatarData: NSData = NSData(contentsOf: avatarURL! as URL)!
+                self.compAvatarDictionary[n] = UIImage(data: avatarData as Data)
+            }
+            
+            // 画像が取得でき次第CoolectionViewを更新する
+            DispatchQueue.main.async {
+                self.collectionView.reloadData()
+                print("reloaded after getImage")
             }
         }
     }
@@ -103,7 +138,11 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         
         let cell : CollectionViewCell = collectionView.dequeueReusableCell(withReuseIdentifier: "MyCell", for: indexPath) as! CollectionViewCell
         //cell.textLabel?.text = indexPath.row.description
-        cell.textLabel?.text = zero[indexPath.row]
+        //cell.card?.text = titleArray[indexPath.row]
+        cell.looking_for?.text = looking_forArray[indexPath.row]
+        cell.title?.text = titleArray[indexPath.row]
+        cell.imageView?.image = imageDictionary[indexPath.row]!
+        cell.compAvatarView?.image = compAvatarDictionary[indexPath.row]!
         
         print("indexPath.row: \(indexPath.row)")
         
