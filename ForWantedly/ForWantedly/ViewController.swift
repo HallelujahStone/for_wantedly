@@ -6,7 +6,6 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet var collectionView: UICollectionView!
     
-    //var zero = [String]()
     var zero = ["","","","","","","","","",""]
     
     override func viewDidLoad() {
@@ -42,10 +41,12 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         DispatchQueue(label: "getJSON").async{
             self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=swift&page=1")
             
+            /* ここなくていいかも
             DispatchQueue.main.async {
                 self.collectionView.reloadData()
                 print("reloaded")
             }
+            */
         }
     }
 
@@ -69,6 +70,11 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                         for i in 0..<10{
                             let title = data[i]["title"] as! String
                             self.zero[i] = title
+                        }
+                        // 取得でき次第メインスレッドでCollectionViewを更新
+                        DispatchQueue.main.async {
+                            self.collectionView.reloadData()
+                            print("reloaded")
                         }
                     }
                     // _metadata取得
@@ -98,6 +104,8 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         let cell : CollectionViewCell = collectionView.dequeueReusableCell(withReuseIdentifier: "MyCell", for: indexPath) as! CollectionViewCell
         //cell.textLabel?.text = indexPath.row.description
         cell.textLabel?.text = zero[indexPath.row]
+        
+        print("indexPath.row: \(indexPath.row)")
         
         return cell
     }
