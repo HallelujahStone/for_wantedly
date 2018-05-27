@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ForWantedly/ViewController.swift"
-            timestampString = "548941055.098663"
+            timestampString = "548969198.441836"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "94"
-            endingLineNumber = "94"
+            startingLineNumber = "74"
+            endingLineNumber = "74"
             landmarkName = "getJSON(url:)"
             landmarkType = "7">
          </BreakpointContent>
