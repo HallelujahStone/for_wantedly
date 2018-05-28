@@ -8,4 +8,4 @@
 ![img_0564](https://user-images.githubusercontent.com/20876842/40616503-510d31da-62c6-11e8-9529-969d1327bbab.PNG)
 
 ## デモ（gif）
-![demogif](https://user-images.githubusercontent.com/20876842/40619056-928296a2-62ce-11e8-9083-c99806d53f60.gif)
+![demogif3](https://user-images.githubusercontent.com/20876842/40619543-6d7afcf8-62d0-11e8-8501-8402c838e1ce.gif)
