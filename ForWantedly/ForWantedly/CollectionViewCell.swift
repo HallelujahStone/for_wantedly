@@ -28,18 +28,21 @@ class CollectionViewCell : UICollectionViewCell{
         super.init(frame: frame)
         
         let margin_left: CGFloat   = 10
-        let margin_top:  CGFloat   = 3
-        let margin_edge: CGFloat   = 15
+        let margin_top:  CGFloat   = 10
+        let margin_edge: CGFloat   = 20
         
         // card(Cellの背景部分)を定義
         card = UILabel(frame: CGRect(x: 0, y: 0, width: frame.width, height: frame.height))
         card.layer.backgroundColor = Style().white.cgColor
         card.layer.cornerRadius = 30
+        card.layer.shadowOffset = CGSize(width: 10.0, height: 10.0)
+        card.layer.shadowOpacity = 0.2
+        card.layer.shadowRadius = 5.0
         self.contentView.addSubview(card)
         //
-        let lfHeight: CGFloat = 35
+        let lfHeight: CGFloat = 20
         looking_for = UILabel(frame: CGRect(x: margin_left, y: margin_left+margin_edge, width: frame.width/2, height: lfHeight))
-        looking_for.font = UIFont.systemFont(ofSize: 14)
+        looking_for.font = UIFont.systemFont(ofSize: 16)
         looking_for.textColor = Style().gold
         looking_for.layer.borderColor = Style().gold.cgColor
         looking_for.layer.borderWidth = 1
@@ -48,17 +51,16 @@ class CollectionViewCell : UICollectionViewCell{
         let ttHeight: CGFloat = 65
         title = UILabel(frame: CGRect(x: margin_left, y: lfHeight+margin_top+margin_edge, width: frame.width-margin_left*2, height: ttHeight))
         title.numberOfLines = 3
-        title.font = UIFont.boldSystemFont(ofSize: 18)
-        //title.adjustsFontSizeToFitWidth = true
+        title.font = UIFont.boldSystemFont(ofSize: 22)
         self.contentView.addSubview(title)
         //
         let imHeight: CGFloat = (frame.width-margin_left*2)*(131/320)
-        imageView = UIImageView(frame: CGRect(x: margin_left, y: lfHeight+ttHeight+margin_top*2+margin_edge, width: frame.width-margin_left*2, height: imHeight))
+        imageView = UIImageView(frame: CGRect(x: margin_left, y: lfHeight+ttHeight+margin_top*3+margin_edge, width: frame.width-margin_left*2, height: imHeight))
         self.contentView.addSubview(imageView)
         //
         let avHeight: CGFloat = 60
-        compAvatarView = UIImageView(frame: CGRect(x: margin_left, y: lfHeight+ttHeight+imHeight+margin_top*4+margin_edge, width: avHeight, height: avHeight))
-        compName = UILabel(frame: CGRect(x: margin_left+avHeight, y: lfHeight+ttHeight+imHeight+margin_top*4+margin_edge, width: 80, height: avHeight))
+        compAvatarView = UIImageView(frame: CGRect(x: margin_left, y: lfHeight+ttHeight+imHeight+margin_top*5+margin_edge, width: avHeight, height: avHeight))
+        compName = UILabel(frame: CGRect(x: margin_left+avHeight+5, y: lfHeight+ttHeight+imHeight+margin_top*5+margin_edge, width: 80, height: avHeight))
         compName.font = UIFont.systemFont(ofSize: 10)
         compName.numberOfLines = 3
         self.contentView.addSubview(compAvatarView)
@@ -97,7 +99,11 @@ class CollectionViewCell : UICollectionViewCell{
         staffing_3.tintColor      = Style().background
         staffing_4.tintColor      = Style().background
         staffing_5.tintColor      = Style().background
-        //staffing_leader.isHidden = true
+        staffing_leader.isHidden = true
+        staffing_2.isHidden      = true
+        staffing_3.isHidden      = true
+        staffing_4.isHidden      = true
+        staffing_5.isHidden      = true
         self.contentView.addSubview(staffing_leader)
         self.contentView.addSubview(staffing_2)
         self.contentView.addSubview(staffing_3)

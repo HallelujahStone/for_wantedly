@@ -13,6 +13,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     var compNameArray = [String]()
     var supportCountArray = [Int]()
     var candidateCountArray = [Int]()
+    var staffingsCountArray = [Int]()
     
     var imageArray = [UIImage]()
     var compAvatarArray = [UIImage]()
@@ -59,9 +60,12 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         let margin_CV: CGFloat = 75
         
         // Cellの定義
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width - 37, height: 375)
-        layout.sectionInset = UIEdgeInsetsMake(10, 0, 100, 0)
-        //layout.headerReferenceSize = CGSize(width:100,height:30)
+        let layoutWidth = UIScreen.main.bounds.width - 37
+        layout.itemSize = CGSize(width: layoutWidth, height: layoutWidth*1.414)
+        layout.sectionInset = UIEdgeInsetsMake(0, 0, 0, 0)
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 15
+        layout.headerReferenceSize = CGSize(width:100,height:25)
         // collectionViewの定義
         self.collectionView = UICollectionView(frame: CGRect(x: 0, y: margin_CV, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height-margin_CV ), collectionViewLayout: layout)
         self.collectionView.register(CollectionViewCell.self, forCellWithReuseIdentifier: "MyCell")
@@ -90,6 +94,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         compNameArray = [String]()
         supportCountArray = [Int]()
         candidateCountArray = [Int]()
+        staffingsCountArray = [Int]()
         imageArray = [UIImage]()
         compAvatarArray = [UIImage]()
         
@@ -138,6 +143,14 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                             let compName = data[i]["company"]!["name"] as! String
                             let support_count = data[i]["support_count"] as! Int
                             let candidate_count = data[i]["candidate_count"] as! Int
+                            let staffings = data[i]["staffings"] as? [[String:AnyObject]]
+                            
+                            self.looking_forArray.append(looking_for)
+                            self.titleArray.append(title)
+                            self.compNameArray.append(compName)
+                            self.supportCountArray.append(support_count)
+                            self.candidateCountArray.append(candidate_count)
+                            self.staffingsCountArray.append(staffings!.count)
                             
                             // 画像系をJSONから取得
                             if let image = data[i]["image"]{
@@ -159,12 +172,6 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                             }else{
                                 self.compAvatarURLArray.append("https://fullfill.sakura.ne.jp/StockList/img/sharp_business_center_black_48dp.png")
                             }
-                            
-                            self.looking_forArray.append(looking_for)
-                            self.titleArray.append(title)
-                            self.compNameArray.append(compName)
-                            self.supportCountArray.append(support_count)
-                            self.candidateCountArray.append(candidate_count)
                         }
                     }
                     
@@ -232,6 +239,21 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     // Cellが選択された時に呼び出される
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         self.view.endEditing(true)
+        
+        UIView.animate(withDuration: 0.2) {
+            if let cell = collectionView.cellForItem(at: indexPath) as? CollectionViewCell {
+                cell.transform = cell.transform.scaledBy(x: 0.98, y: 0.98)
+                cell.transform = cell.transform.translatedBy(x: 2.0, y: 2.0)
+                cell.card?.layer.shadowOffset = CGSize(width: 5.0, height: 5.0)
+            }
+        }
+        UIView.animate(withDuration: 0.2, delay: 0.2, animations: { () -> Void in
+            if let cell = collectionView.cellForItem(at: indexPath) as? CollectionViewCell {
+                cell.transform = .identity
+                cell.card?.layer.shadowOffset = CGSize(width: 10.0, height: 10.0)
+            }
+        })
+    
         print("Num: \(indexPath.row)")
     }
     // Cellの総数を返す
@@ -250,6 +272,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     
         print("indexPath.row: \(indexPath.row)")
         
+    
         // CollectionViewのスクロールが一番下に来た時にページを更新する
         if collectionView.contentOffset.y + collectionView.frame.size.height > collectionView.contentSize.height && collectionView.isDragging {
             // ページ数がトータルのページを超えていない時
@@ -272,6 +295,10 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
             cell.compName?.text = compNameArray[indexPath.row]
             cell.supportCount?.text = String(supportCountArray[indexPath.row])
             cell.candidateCount?.text = String(candidateCountArray[indexPath.row])
+            let staffings = [cell.staffing_leader, cell.staffing_2, cell.staffing_3, cell.staffing_4, cell.staffing_5]
+            for i in 0..<staffingsCountArray[indexPath.row] {
+                staffings[i]?.isHidden = false
+            }
         }
         // 画像系
         if (imageArray.count > indexPath.row) && (compAvatarArray.count > indexPath.row) {
@@ -280,6 +307,24 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         }
     
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didHighlightItemAt indexPath: IndexPath) {
+        UIView.animate(withDuration: 0.2) {
+            if let cell = collectionView.cellForItem(at: indexPath) as? CollectionViewCell {
+                cell.transform = cell.transform.scaledBy(x: 0.98, y: 0.98)
+                cell.transform = cell.transform.translatedBy(x: 2.0, y: 2.0)
+                cell.card?.layer.shadowOffset = CGSize(width: 5.0, height: 5.0)
+            }
+        }
+    }
+    func collectionView(_ collectionView: UICollectionView, didUnhighlightItemAt indexPath: IndexPath) {
+        UIView.animate(withDuration: 0.2) {
+            if let cell = collectionView.cellForItem(at: indexPath) as? CollectionViewCell {
+                cell.transform = .identity
+                cell.card?.layer.shadowOffset = CGSize(width: 10.0, height: 10.0)
+            }
+        }
     }
 }
 
