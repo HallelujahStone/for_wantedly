@@ -14,10 +14,13 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     var supportCountArray = [Int]()
     var candidateCountArray = [Int]()
     
-    var imageDictionary = [UIImage]()
-    var compAvatarDictionary = [UIImage]()
+    var imageArray = [UIImage]()
+    var compAvatarArray = [UIImage]()
     
-    var searchWord = ""
+    var searchWord         = ""
+    var page: Int          = 1
+    var total_pages: Int   = 20
+    var total_objects: Int = 200
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -65,8 +68,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         
         // 非同期処理でAPI取得
         DispatchQueue(label: "getJSON").async{
-            //self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=\(self.searchWord)&page=1")
-            self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=福岡&page=1")
+            self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=&page=1")
         }
     }
     
@@ -75,6 +77,8 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         //キーボードを閉じる
         self.view.endEditing(true)
         searchWord = searchBar.text!
+        page = 1
+        
         looking_forArray = [String]()
         titleArray = [String]()
         imageURLArray = [String]()
@@ -82,15 +86,18 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         compNameArray = [String]()
         supportCountArray = [Int]()
         candidateCountArray = [Int]()
-        imageDictionary = [UIImage]()
-        compAvatarDictionary = [UIImage]()
+        imageArray = [UIImage]()
+        compAvatarArray = [UIImage]()
         
         self.collectionView.reloadData()
-
+        self.collectionView.setContentOffset(CGPoint(x: 0, y: -self.collectionView.contentInset.top), animated: true) // CollectionViewのスクロールを一番上に持ってくる
+        
+        print("検索ボタンが押されました")
         
         DispatchQueue(label: "getJSON").async{
             self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=\(self.searchWord)&page=1")
         }
+        print(searchWord)
     }
     
     // TextField以外の部分をタッチした時にキーボード閉じるやつ
@@ -115,24 +122,38 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                     
                     if let data = json["data"] as? [[String:AnyObject]] {
                         //
-                        for i in 0..<10{
+                        var end   = 10
+                        if self.page == self.total_pages {
+                            end -= self.total_pages * 10 - self.total_objects
+                        }
+                        
+                        for i in 0..<end{
+                            // 文字・数字系をJSONから取得
                             let looking_for = data[i]["looking_for"] as! String
                             let title = data[i]["title"] as! String
-                            
                             let compName = data[i]["company"]!["name"] as! String
                             let support_count = data[i]["support_count"] as! Int
                             let candidate_count = data[i]["candidate_count"] as! Int
                             
-                            if let imageURL = data[i]["image"]!["i_320_131"] as? String{
-                                self.imageURLArray.append(imageURL)
-                            }else{
-                                self.imageURLArray.append("https://fullfill.sakura.ne.jp/StockList/img/icon6.jpg")
+                            // 画像系をJSONから取得
+                            if let image = data[i]["image"]{
+                                if let imageURL = image["i_320_131"] as? String {
+                                    self.imageURLArray.append(imageURL)
+                                }else {
+                                    self.imageURLArray.append("https://fullfill.sakura.ne.jp/StockList/img/EV185135046_TP_V4.jpg")
+                                }
+                            }else {
+                                self.imageURLArray.append("https://fullfill.sakura.ne.jp/StockList/img/EV185135046_TP_V4.jpg")
                             }
+                            
                             if let compAvatar = data[i]["company"]!["avatar"] as? [String:AnyObject] {
-                                let compAvatarURL = compAvatar["s_100"] as! String
-                                self.compAvatarURLArray.append(compAvatarURL)
+                                if let compAvatarURL = compAvatar["s_100"] as? String {
+                                    self.compAvatarURLArray.append(compAvatarURL)
+                                }else{
+                                    self.compAvatarURLArray.append("https://fullfill.sakura.ne.jp/StockList/img/sharp_business_center_black_48dp.png")
+                                }
                             }else{
-                                self.compAvatarURLArray.append("https://fullfill.sakura.ne.jp/StockList/img/icon6.jpg")
+                                self.compAvatarURLArray.append("https://fullfill.sakura.ne.jp/StockList/img/sharp_business_center_black_48dp.png")
                             }
                             
                             self.looking_forArray.append(looking_for)
@@ -151,9 +172,13 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                         // URLから画像を取得する
                         self.getImage()
                     }
+                    
                     // _metadata取得
                     if let metadata = json["_metadata"] as? [String: AnyObject]{
-                        print("metadata: \(metadata)")
+                        // トータルのページ数を更新
+                        self.total_pages   = metadata["total_pages"] as! Int
+                        self.total_objects = metadata["total_objects"] as! Int
+                        print(metadata)
                     }
                 } catch {
                     print("")
@@ -168,15 +193,28 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     func getImage(){
         // サブスレッドでURLから画像を取得して辞書に入れる
         DispatchQueue(label: "getImage").async{
-            print(self.compAvatarURLArray.count)
-            for n in 0..<10{
+            print("searchWord   : \(self.searchWord)")
+            print("page         : \(self.page)")
+            print("total_pages  : \(self.total_pages)")
+            print("total_objects: \(self.total_objects)")
+            print("compAvatarURLArrayの長さ: \(self.compAvatarURLArray.count)")
+            
+            let start = (self.page-1)*10
+            var end   = start+10
+            if self.page == self.total_pages {
+                end -= self.total_pages * 10 - self.total_objects
+            }
+            print("start: ", start)
+            print("end  : ", end)
+            
+            for n in start..<end{
                 let imageURL = NSURL(string: self.imageURLArray[n])
                 let imageData: NSData = NSData(contentsOf: imageURL! as URL)!
-                self.imageDictionary.append(UIImage(data: imageData as Data)!)
+                self.imageArray.append(UIImage(data: imageData as Data)!)
                 
                 let avatarURL = NSURL(string: self.compAvatarURLArray[n])
                 let avatarData: NSData = NSData(contentsOf: avatarURL! as URL)!
-                self.compAvatarDictionary.append(UIImage(data: avatarData as Data)!)
+                self.compAvatarArray.append(UIImage(data: avatarData as Data)!)
             }
             
             // 画像が取得でき次第CoolectionViewを更新する
@@ -194,15 +232,35 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     }
     // Cellの総数を返す
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 10
+        // 今のページが最後の時
+        if page == total_pages {
+            return total_objects
+        }else {
+            return page * 10
+        }
     }
     // Cellに値を設定する
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         let cell : CollectionViewCell = collectionView.dequeueReusableCell(withReuseIdentifier: "MyCell", for: indexPath) as! CollectionViewCell
     
+        print("indexPath.row: \(indexPath.row)")
+        
+        // CollectionViewのスクロールが一番下に来た時にページを更新する
+        if collectionView.contentOffset.y + collectionView.frame.size.height > collectionView.contentSize.height && collectionView.isDragging {
+            // ページ数がトータルのページを超えていない時
+            if page < total_pages {
+                page += 1
+                collectionView.reloadData()
+                print("新規ページを追加しました")
+                DispatchQueue(label: "getJSON").async{
+                    self.getJSON(url: "https://www.wantedly.com/api/v1/projects?q=\(self.searchWord)&page=\(self.page)")
+                }
+            }
+        }
+        
         // 文字系
-        if looking_forArray.count > indexPath.row{
+        if looking_forArray.count > indexPath.row {
             cell.looking_for?.text = looking_forArray[indexPath.row]
             cell.title?.text = titleArray[indexPath.row]
             cell.compName?.text = compNameArray[indexPath.row]
@@ -210,13 +268,11 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
             cell.candidateCount?.text = String(candidateCountArray[indexPath.row])
         }
         // 画像系
-        if imageDictionary.count > indexPath.row{
-            cell.imageView?.image = imageDictionary[indexPath.row]
-            cell.compAvatarView?.image = compAvatarDictionary[indexPath.row]
+        if (imageArray.count > indexPath.row) && (compAvatarArray.count > indexPath.row) {
+            cell.imageView?.image = imageArray[indexPath.row]
+            cell.compAvatarView?.image = compAvatarArray[indexPath.row]
         }
-        
-        print("indexPath.row: \(indexPath.row)")
-        
+    
         return cell
     }
 }
