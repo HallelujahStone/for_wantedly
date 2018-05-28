@@ -38,8 +38,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
             let attributeDict = [NSAttributedStringKey.foregroundColor: Style().white_alpha, NSAttributedStringKey.font : UIFont.systemFont(ofSize: 16)]
             searchTextField!.attributedPlaceholder = NSAttributedString(string: "地域や特徴など条件を追加", attributes: attributeDict) // プレースホルダーの文字と色とフォント
         }
-        let textFieldInsideSearchBar = searchBar.value(forKey: "searchField") as? UITextField
-        let glassIconView = textFieldInsideSearchBar?.leftView as? UIImageView
+        let glassIconView = searchTextField?.leftView as? UIImageView
         glassIconView?.image = glassIconView?.image?.withRenderingMode(.alwaysTemplate)
         glassIconView?.tintColor = Style().white // 検索アイコンの色
         for subView in searchBar.subviews {
@@ -47,6 +46,11 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
                 secondSubView.backgroundColor = Style().background_light // 検索バーの中の色
             }
         }
+        let rightButton: UIButton? = searchTextField?.value(forKey: "clearButton") as? UIButton
+        let rightButtonImage = UIImage(named: "baseline_cancel_white_18dp")
+        rightButton?.setImage(rightButtonImage, for: .normal)
+        rightButton?.tintColor = Style().white // クリアボタンの色変更
+        
         searchBar.delegate = self
         
         // CollectionViewのレイアウトを生成.
@@ -55,7 +59,7 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         let margin_CV: CGFloat = 75
         
         // Cellの定義
-        layout.itemSize = CGSize(width: UIScreen.main.bounds.width - 37, height: 350)
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width - 37, height: 375)
         layout.sectionInset = UIEdgeInsetsMake(10, 0, 100, 0)
         //layout.headerReferenceSize = CGSize(width:100,height:30)
         // collectionViewの定義
@@ -262,7 +266,9 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         // 文字系
         if looking_forArray.count > indexPath.row {
             cell.looking_for?.text = looking_forArray[indexPath.row]
+            cell.looking_for?.sizeToFit()
             cell.title?.text = titleArray[indexPath.row]
+            cell.title?.sizeToFit()
             cell.compName?.text = compNameArray[indexPath.row]
             cell.supportCount?.text = String(supportCountArray[indexPath.row])
             cell.candidateCount?.text = String(candidateCountArray[indexPath.row])

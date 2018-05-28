@@ -16,5 +16,6 @@ class Style{
     let white = UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1)
     let white_alpha = UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 0.5)
     let gray = UIColor(red: 220/255, green: 220/255, blue: 220/255, alpha: 1)
+    let gold = UIColor(red: 230/255, green: 180/255, blue: 34/255, alpha: 1)
     
 }
